@@ -27,7 +27,7 @@ The app is built using modern Android development practices:
 - **JDK 17** or higher.
 - **Android Studio Iguana** (or newer) recommended.
 - **Android SDK 34** (Compile SDK).
-- **Minimum SDK 31** (Android 12).
+- **Minimum SDK 30** (Android 11).
 
 ### Building from Command Line
 1. Clone the repository:
