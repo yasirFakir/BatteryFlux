@@ -9,12 +9,21 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.battify.MainActivity
-import com.battify.R
 import com.battify.data.BatteryRepository
+import com.battify.data.WidgetSettings
+import com.battify.data.WidgetSettingsRepository
+import com.battify.widget.BatteryWidget
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class BatteryService : Service() {
 
     private lateinit var batteryRepository: BatteryRepository
+    private lateinit var widgetSettingsRepository: WidgetSettingsRepository
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val CHANNEL_ID = "BatteryServiceChannel"
     private val NOTIFICATION_ID = 1
 
@@ -23,6 +32,7 @@ class BatteryService : Service() {
             if (intent.action == Intent.ACTION_BATTERY_CHANGED) {
                 batteryRepository.updateBatteryInfo()
                 updateNotification()
+                updateWidget()
             }
         }
     }
@@ -30,6 +40,7 @@ class BatteryService : Service() {
     override fun onCreate() {
         super.onCreate()
         batteryRepository = BatteryRepository(this)
+        widgetSettingsRepository = WidgetSettingsRepository(this)
         createNotificationChannel()
         registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
     }
@@ -66,6 +77,13 @@ class BatteryService : Service() {
     private fun updateNotification() {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, createNotification())
+    }
+
+    private fun updateWidget() {
+        serviceScope.launch {
+            val settings = widgetSettingsRepository.settingsFlow.first()
+            BatteryWidget.update(this@BatteryService, batteryRepository.batteryInfo.value, settings)
+        }
     }
 
     private fun createNotificationChannel() {
