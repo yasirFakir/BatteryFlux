@@ -3,15 +3,24 @@ package com.battify.data
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.app.usage.UsageStatsManager
 import android.os.BatteryManager
+import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+
+data class AppUsageInfo(
+    val packageName: String,
+    val usageTimeMillis: Long,
+    val percentage: Float
+)
 
 data class BatteryInfo(
     val level: Int,
     val isCharging: Boolean,
     val health: Int,
-    val status: Int
+    val status: Int,
+    val appUsage: List<AppUsageInfo> = emptyList()
 )
 
 class BatteryRepository(private val context: Context) {
@@ -36,6 +45,36 @@ class BatteryRepository(private val context: Context) {
 
         val health: Int = batteryStatus?.getIntExtra(BatteryManager.EXTRA_HEALTH, -1) ?: -1
 
-        return BatteryInfo(batteryPct, isCharging, health, status)
+        val appUsage = getAppUsageStats()
+
+        return BatteryInfo(batteryPct, isCharging, health, status, appUsage)
+    }
+
+    private fun getAppUsageStats(): List<AppUsageInfo> {
+        val usageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, -1)
+        val stats = usageStatsManager.queryUsageStats(
+            UsageStatsManager.INTERVAL_DAILY,
+            calendar.timeInMillis,
+            System.currentTimeMillis()
+        )
+
+        if (stats.isNullOrEmpty()) return emptyList()
+
+        val totalTime = stats.sumOf { it.totalTimeInForeground }
+        if (totalTime == 0L) return emptyList()
+
+        return stats
+            .filter { it.totalTimeInForeground > 0 }
+            .map {
+                AppUsageInfo(
+                    it.packageName,
+                    it.totalTimeInForeground,
+                    (it.totalTimeInForeground.toFloat() / totalTime) * 100
+                )
+            }
+            .sortedByDescending { it.usageTimeMillis }
+            .take(10)
     }
 }
