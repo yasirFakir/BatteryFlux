@@ -13,15 +13,21 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import com.battify.data.BatteryRepository
 import com.battify.service.BatteryService
+import com.battify.ui.DashboardScreen
 import com.battify.ui.theme.BatteryFluxTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var batteryRepository: BatteryRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        batteryRepository = BatteryRepository(this)
         
         requestPermissions()
         if (!hasUsageStatsPermission()) {
@@ -31,14 +37,21 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             BatteryFluxTheme {
+                val batteryInfo by batteryRepository.batteryInfo.collectAsState()
+                
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("BatteryFlux")
+                    DashboardScreen(batteryInfo = batteryInfo)
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        batteryRepository.updateBatteryInfo()
     }
 
     private fun startBatteryService() {
@@ -77,12 +90,4 @@ class MainActivity : ComponentActivity() {
         }
         return mode == AppOpsManager.MODE_ALLOWED
     }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
 }
