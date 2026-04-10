@@ -4,6 +4,26 @@ BatteryFlux is a highly customizable battery widget application for Android 12+ 
 
 ## 🏗️ Architecture
 
+```text
+.
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── kotlin/com/battify/
+│   │   │   │   ├── data/                 # Battery & Settings Repositories
+│   │   │   │   ├── service/              # Foreground Battery Monitoring Service
+│   │   │   │   ├── ui/                   # Jetpack Compose Screens (Dashboard, Customization)
+│   │   │   │   ├── widget/               # Glance-based Widget Implementation
+│   │   │   │   └── MainActivity.kt       # Main entry point & Permission handling
+│   │   │   ├── res/                      # Android Resources (Layouts, Themes, XML)
+│   │   │   └── AndroidManifest.xml       # App Permissions & Component Declarations
+│   │   └── test/                         # Unit tests
+│   └── build.gradle.kts                  # App-level dependencies
+├── build.gradle.kts                      # Project-level configuration
+├── settings.gradle.kts                   # Project settings & Module inclusion
+└── README.md                             # Documentation
+```
+
 The app is built using modern Android development practices:
 
 - **UI Framework:** [Jetpack Compose](https://developer.android.com/jetpack/compose) for a declarative and reactive main application interface.
