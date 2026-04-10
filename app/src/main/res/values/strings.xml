@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">BatteryFlux</string>
+    <string name="widget_description">A customizable battery widget.</string>
+</resources>
